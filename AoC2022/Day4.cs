@@ -4,15 +4,21 @@ public class Day4 : SolverBase
 {
     protected override long Solve(IEnumerable<string> input)
     {
-        return input.Where(i => !string.IsNullOrEmpty(i)).Count(i =>
-        {
-            var parts = i.Split(',');
-            var (a, b) = (parts[0], parts[1]);
-            var aParts = a.Split('-').Select(int.Parse).OrderBy(_ => _).ToArray();
-            var bParts = b.Split('-').Select(int.Parse).OrderBy(_ => _).ToArray();
+        return input
+            .Where(i => !string.IsNullOrEmpty(i))
+            .Count(i =>
+            {
+                var parts = i
+                    .Split(',')
+                    .Select(p => p
+                        .Split('-')
+                        .Select(int.Parse)
+                        .ToArray()
+                    )
+                    .ToArray();
 
-            return Overlap(aParts[0], aParts[1], bParts[0], bParts[1]);
-        });
+                return Overlap(parts[0][0], parts[0][1], parts[1][0], parts[1][1]);
+            });
     }
 
     private static bool Overlap(int a1, int a2, int b1, int b2)

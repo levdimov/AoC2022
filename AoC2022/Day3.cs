@@ -4,28 +4,14 @@ public class Day3 : SolverBase
 {
     protected override long Solve(IEnumerable<string> input)
     {
-        var sum = 0;
-        var counter = 0;
-        IEnumerable<char>? items = null;
-        foreach (var line in input)
-        {
-            if (string.IsNullOrEmpty(line))
-            {
-                continue;
-            }
-
-            items = (items ?? line).Intersect(line);
-            counter += 1;
-
-            if (counter == 3)
-            {
-                counter = 0;
-                sum += Score(items.Single());
-                items = null;
-            }
-        }
-
-        return sum;
+        return input
+            .Where(i => !string.IsNullOrEmpty(i))
+            .Chunk(3)
+            .Select(lines => lines
+                .Select(l => l.AsEnumerable())
+                .Aggregate((a, b) => a.Intersect(b)))
+            .Select(items => Score(items.Single()))
+            .Sum();
     }
 
     private static int Score(char item)
