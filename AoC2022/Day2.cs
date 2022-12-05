@@ -2,7 +2,7 @@
 
 public class Day2 : SolverBase
 {
-    protected override long Solve(IEnumerable<string> input)
+    protected override string Solve(IEnumerable<string> input)
     {
         var sum = 0;
         foreach (var line in input)
@@ -17,7 +17,7 @@ public class Day2 : SolverBase
             };
         }
 
-        return sum;
+        return sum.ToString();
     }
 
     private static int Score(int his, int yours)

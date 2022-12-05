@@ -2,7 +2,7 @@
 
 public class Day1 : SolverBase
 {
-    protected override long Solve(IEnumerable<string> input)
+    protected override string Solve(IEnumerable<string> input)
     {
         var max = new SortedSet<long>();
         var current = 0L;
@@ -20,6 +20,6 @@ public class Day1 : SolverBase
 
         max.Add(current);
 
-        return max.TakeLast(3).Sum();
+        return max.TakeLast(3).Sum().ToString();
     }
 }

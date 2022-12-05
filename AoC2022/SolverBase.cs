@@ -12,7 +12,7 @@ public abstract class SolverBase
         Console.WriteLine(answer);
     }
 
-    protected abstract long Solve(IEnumerable<string> input);
+    protected abstract string Solve(IEnumerable<string> input);
 
     private IEnumerable<string> ReadInput()
     {

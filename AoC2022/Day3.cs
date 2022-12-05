@@ -2,7 +2,7 @@ namespace AoC2022;
 
 public class Day3 : SolverBase
 {
-    protected override long Solve(IEnumerable<string> input)
+    protected override string Solve(IEnumerable<string> input)
     {
         return input
             .Where(i => !string.IsNullOrEmpty(i))
@@ -11,7 +11,8 @@ public class Day3 : SolverBase
                 .Select(l => l.AsEnumerable())
                 .Aggregate((a, b) => a.Intersect(b)))
             .Select(items => Score(items.Single()))
-            .Sum();
+            .Sum()
+            .ToString();
     }
 
     private static int Score(char item)

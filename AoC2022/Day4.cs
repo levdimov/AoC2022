@@ -2,7 +2,7 @@
 
 public class Day4 : SolverBase
 {
-    protected override long Solve(IEnumerable<string> input)
+    protected override string Solve(IEnumerable<string> input)
     {
         return input
             .Where(i => !string.IsNullOrEmpty(i))
@@ -18,7 +18,8 @@ public class Day4 : SolverBase
                     .ToArray();
 
                 return Overlap(parts[0][0], parts[0][1], parts[1][0], parts[1][1]);
-            });
+            })
+            .ToString();
     }
 
     private static bool Overlap(int a1, int a2, int b1, int b2)
