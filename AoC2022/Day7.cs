@@ -31,32 +31,24 @@ public class Day7 : SolverBase
 
     private static Func<Directory, Directory> ToCommand(string line)
     {
-        if (line.StartsWith("$"))
-        {
-            var command = line.Split("$").Last().Trim().Split(" ");
-            return command[0] switch
-            {
-                "cd" => d => d.Cd(command[1]),
-                "ls" => d => d,
-                _ => throw new ArgumentOutOfRangeException()
-            };
-        }
+        var parts = line.Split(" ");
 
-        var content = line.Split(" ");
+        var command = (parts[0], parts[1], parts.ElementAtOrDefault(2));
 
-        if (content[0] == "dir")
+        return command switch
         {
-            return d =>
-            {
-                d.MkDir(content[1]);
-                return d;
-            };
-        }
-
-        return d =>
-        {
-            d.CreateFile(content[1], int.Parse(content[0]));
-            return d;
+            ("$", "cd", _) => d => d.Cd(command.Item3),
+            ("$", "ls", _) => d => d,
+            ("dir", _, _) => d =>
+                             {
+                                 d.MkDir(command.Item2);
+                                 return d;
+                             },
+            _ => d =>
+                 {
+                     d.CreateFile(command.Item2, int.Parse(command.Item1));
+                     return d;
+                 }
         };
     }
 
