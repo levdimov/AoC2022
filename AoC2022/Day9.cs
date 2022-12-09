@@ -21,17 +21,39 @@ public class Day9 : SolverBase
             };
             for (var steps = 0; steps < int.Parse(p[1]); steps++)
             {
-                rope.MoveHead(delta);
+                rope.Move(delta);
             }
         }
 
         return rope.TotalVisited.ToString();
     }
 
+    private class Knot
+    {
+        public int Y { get; set; }
+        public int X { get; set; }
+
+        public Knot(int y, int x)
+        {
+            Y = y;
+            X = x;
+        }
+
+        public void Move((int y, int x) delta)
+        {
+            Y += delta.y;
+            X += delta.x;
+        }
+
+        public static implicit operator (int y, int x)(Knot t) => (t.Y, t.X);
+
+        public override string ToString() => $"{Y},{X}";
+    }
+
     private class Rope
     {
-        public (int y, int x) Head { get; private set; } = (0, 0);
-        public (int y, int x) Tail { get; private set; } = (0, 0);
+        public Knot Head { get; } = new(0, 0);
+        public Knot[] Tail { get; } = Enumerable.Range(0, 9).Select(_ => new Knot(0, 0)).ToArray();
 
         private readonly HashSet<(int, int)> visited = new();
 
@@ -39,34 +61,40 @@ public class Day9 : SolverBase
 
         public Rope()
         {
-            visited.Add(Tail);
+            visited.Add(Tail.Last());
         }
 
-        public void MoveHead((int y, int x) delta)
+        public void Move((int y, int x) delta)
         {
-            Head = (Head.y + delta.y, Head.x + delta.x);
+            Head.Move(delta);
 
-            var distY = Head.y - Tail.y;
-            var distX = Head.x - Tail.x;
-            if (Abs(distY) <= 1 && Abs(distX) <= 1)
+            var previousKnot = Head;
+            foreach (var knot in Tail)
             {
-                return;
+                var distY = previousKnot.Y - knot.Y;
+                var distX = previousKnot.X - knot.X;
+                if (Abs(distY) <= 1 && Abs(distX) <= 1)
+                {
+                    return;
+                }
+
+                (int y, int x) tailDelta;
+                if (distY == 0 || distX == 0)
+                {
+                    tailDelta = distY == 0
+                        ? (0, distX / Abs(distX))
+                        : (distY / Abs(distY), 0);
+                }
+                else
+                {
+                    tailDelta = (distY / Abs(distY), distX / Abs(distX));
+                }
+
+                knot.Move(tailDelta);
+                previousKnot = knot;
             }
 
-            (int y, int x) tailDelta;
-            if (distY == 0 || distX == 0)
-            {
-                tailDelta = distY == 0
-                    ? (0, distX / Abs(distX))
-                    : (distY / Abs(distY), 0);
-            }
-            else
-            {
-                tailDelta = (distY / Abs(distY), distX / Abs(distX));
-            }
-
-            Tail = (Tail.y + tailDelta.y, Tail.x + tailDelta.x);
-            visited.Add(Tail);
+            visited.Add(Tail.Last());
         }
     }
 }
