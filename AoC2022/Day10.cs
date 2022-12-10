@@ -6,27 +6,20 @@ public class Day10 : SolverBase
     {
         var register = new Register();
 
-        var signalStrengths = new List<(int, int)> { (0, 0) };
+        var signalStrengths = new List<char>();
         signalStrengths.AddRange(input
             .Where(i => !string.IsNullOrEmpty(i))
             .SelectMany(ToCommand)
             .Select((c, i) =>
                     {
-                        var cycle = i + 1;
                         var value = register.Value;
 
                         c(register);
 
-                        return (value, cycle * value);
+                        return new[] { value - 1, value, value + 1 }.Contains(i % 40) ? '#' : '.';
                     }));
 
-        var result = 0;
-        for (var i = 20; i < signalStrengths.Count; i += 40)
-        {
-            result += signalStrengths[i].Item2;
-        }
-
-        return result.ToString();
+        return string.Join(Environment.NewLine, signalStrengths.Chunk(40).Select(c => new string(c)));
     }
 
     private Action<Register>[] ToCommand(string commandString)
