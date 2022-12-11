@@ -12,11 +12,13 @@ public class Day11 : SolverBase
 
         MonkeyBusiness.Instance.Monkeys = monkeys;
 
-        for (var i = 0; i < 20; i++)
+        var aggregate = monkeys.Select(m => m.TestDiv).Aggregate(1, (a, b) => a * b);
+
+        for (var i = 0; i < 10000; i++)
         {
             foreach (var monkey in monkeys)
             {
-                monkey.Round();
+                monkey.Round(w => w % aggregate);
             }
         }
 
@@ -38,37 +40,18 @@ public class Day11 : SolverBase
 
         var operationDescription = monkeyDescription[2].Split("Operation: new = old ")[1].Split(" ");
         long? factor = operationDescription[1] == "old" ? null : long.Parse(operationDescription[1]);
-        Func<Item, Item> operation = operationDescription[0] switch
+        var div = int.Parse(monkeyDescription[3].Split("Test: divisible by ")[1]);
+        Action<Item> operation = operationDescription[0] switch
         {
-            "*" => i =>
-                   {
-                       i.WorryLevel *= factor ?? i.WorryLevel;
-
-                       i.WorryLevel = (long)Math.Floor(i.WorryLevel / 3m);
-
-                       return i;
-                   },
-            "+" => i =>
-                   {
-                       i.WorryLevel += factor ?? i.WorryLevel;
-
-                       i.WorryLevel = (long)Math.Floor(i.WorryLevel / 3m);
-
-                       return i;
-                   },
+            "*" => i => i.WorryLevel *= factor ?? i.WorryLevel,
+            "+" => i => i.WorryLevel += factor ?? i.WorryLevel,
             _ => throw new ArgumentOutOfRangeException()
         };
-
-        Func<Item, bool> test = i =>
-                                {
-                                    var div = long.Parse(monkeyDescription[3].Split("Test: divisible by ")[1]);
-                                    return i.WorryLevel % div == 0;
-                                };
 
         var throwToMonkeyIfTrue = int.Parse(monkeyDescription[4].Split("If true: throw to monkey ")[1]);
         var throwToMonkeyIfFalse = int.Parse(monkeyDescription[5].Split("If false: throw to monkey ")[1]);
 
-        return new Monkey(items, operation, test, throwToMonkeyIfTrue, throwToMonkeyIfFalse, MonkeyBusiness.Instance);
+        return new Monkey(items, operation, div, throwToMonkeyIfTrue, throwToMonkeyIfFalse, MonkeyBusiness.Instance);
     }
 
     private class Item
@@ -96,9 +79,9 @@ public class Day11 : SolverBase
 
         public Queue<Item> Items { get; }
 
-        public Func<Item, Item> Operation { get; }
+        public Action<Item> Operation { get; }
 
-        public Func<Item, bool> Test { get; }
+        public int TestDiv { get; }
 
         public int MonkeyToThrowIfTrue { get; }
 
@@ -108,8 +91,8 @@ public class Day11 : SolverBase
 
         public Monkey(
             IEnumerable<Item> items,
-            Func<Item, Item> operation,
-            Func<Item, bool> test,
+            Action<Item> operation,
+            int testDiv,
             int monkeyToThrowIfTrue,
             int monkeyToThrowIfFalse,
             MonkeyBusiness monkeyBusiness
@@ -118,12 +101,12 @@ public class Day11 : SolverBase
             this.monkeyBusiness = monkeyBusiness;
             Items = new Queue<Item>(items);
             Operation = operation;
-            Test = test;
+            TestDiv = testDiv;
             MonkeyToThrowIfTrue = monkeyToThrowIfTrue;
             MonkeyToThrowIfFalse = monkeyToThrowIfFalse;
         }
 
-        public void Round()
+        public void Round(Func<long, long> limit)
         {
             while (Items.Any())
             {
@@ -131,9 +114,11 @@ public class Day11 : SolverBase
 
                 var item = Items.Dequeue();
 
-                item = Operation(item);
+                Operation(item);
 
-                if (Test(item))
+                item.WorryLevel = limit(item.WorryLevel);
+
+                if (item.WorryLevel % TestDiv == 0)
                 {
                     monkeyBusiness.Get(MonkeyToThrowIfTrue).Catch(item);
                 }
