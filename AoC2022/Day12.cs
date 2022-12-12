@@ -8,32 +8,36 @@ public class Day12 : SolverBase
         var mapWidth = input.First().Length;
         var mapHeight = heightMap.Length / mapWidth;
 
-        var start = heightMap.IndexOf('S');
         var end = heightMap.IndexOf('E');
-
         heightMap = heightMap.Replace('S', 'a').Replace('E', 'z');
 
-        var d = new int?[heightMap.Length];
-        d[start] = 0;
-        var q = new Queue<C>();
-        q.Enqueue(new C(start, mapWidth, mapHeight));
-
-        while (q.Any())
+        var ways = new List<int>();
+        foreach (var start in heightMap.Select((c, i) => (c, i)).Where(p => p.c == 'a').Select(p => p.i))
         {
-            var a = q.Dequeue();
-            var current = heightMap[a.MapHeight];
-            foreach (var e in a.E.Where(e => heightMap[e.Plain] - heightMap[a.Plain] <= 1))
+            var d = new int?[heightMap.Length];
+            d[start] = 0;
+            var q = new Queue<C>();
+            q.Enqueue(new C(start, mapWidth, mapHeight));
+
+            while (q.Any())
             {
-                var target = heightMap[e.Plain];
-                if (!d[e.Plain].HasValue)
+                var a = q.Dequeue();
+                var current = heightMap[a.MapHeight];
+                foreach (var e in a.E.Where(e => heightMap[e.Plain] - heightMap[a.Plain] <= 1))
                 {
-                    d[e.Plain] = d[a.Plain] + 1;
-                    q.Enqueue(e);
+                    var target = heightMap[e.Plain];
+                    if (!d[e.Plain].HasValue)
+                    {
+                        d[e.Plain] = d[a.Plain] + 1;
+                        q.Enqueue(e);
+                    }
                 }
             }
+
+            ways.Add(d[end] ?? int.MaxValue);
         }
 
-        return d[end].ToString();
+        return ways.Min().ToString();
     }
 
     private record C (
