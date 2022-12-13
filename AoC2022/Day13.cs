@@ -1,23 +1,37 @@
-﻿namespace AoC2022;
+﻿using MoreLinq;
+
+namespace AoC2022;
 
 public class Day13 : SolverBase
 {
     protected override string Solve(IEnumerable<string> input)
     {
-        var signalPairs = input
+        var add2 = new Signal(new[] { new Signal(new[] { new Signal(2) }) });
+        var add6 = new Signal(new[] { new Signal(new[] { new Signal(6) }) });
+
+        var signalsOrdered = input
             .Where(i => !string.IsNullOrEmpty(i))
-            .Chunk(2)
-            .Select(p => p.Select(Signal.Parse).ToArray())
+            .Select(Signal.Parse)
+            .Concat(new[] { add2, add6 })
+            .OrderBy(s => s, new SignalComparer())
+            .Index(1)
             .ToArray();
 
-        var comparisonResults = signalPairs
-            .Select((signalPair, i) => (Compare(signalPair[0], signalPair[1]), i + 1))
-            .ToArray();
+        return (signalsOrdered.Single(i => i.Value == add2).Key * signalsOrdered.Single(i => i.Value == add6).Key).ToString();
+    }
 
-        return comparisonResults
-            .Where(r => r.Item1 ?? true)
-            .Sum(r => r.Item2)
-            .ToString();
+    private class SignalComparer : IComparer<Signal>
+    {
+        public int Compare(Signal x, Signal y)
+        {
+            var c = Day13.Compare(x, y);
+            return c switch
+            {
+                false => 1,
+                null => 0,
+                true => -1
+            };
+        }
     }
 
     private static bool? Compare(Signal s1, Signal s2)
@@ -87,7 +101,7 @@ public class Day13 : SolverBase
             SubSignals = subSignals;
         }
 
-        private Signal(int? value)
+        public Signal(int? value)
         {
             Value = value;
         }
