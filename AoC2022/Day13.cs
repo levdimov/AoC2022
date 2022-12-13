@@ -1,4 +1,6 @@
 ﻿using MoreLinq;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace AoC2022;
 
@@ -118,66 +120,17 @@ public class Day13 : SolverBase
 
         public static Signal Parse(string signalDescription)
         {
-            signalDescription = signalDescription[1..^1];
-
-            if (string.IsNullOrEmpty(signalDescription))
-            {
-                return new Signal(Array.Empty<Signal>());
-            }
-
-            var subSignals = new Queue<Signal>();
-            while (true)
-            {
-                var (subSignalBegin, subSignalEnd) = GetSubSignalIndexes(signalDescription);
-                if (subSignalBegin >= 0)
-                {
-                    subSignals.Enqueue(Parse(signalDescription[subSignalBegin..(subSignalEnd + 1)]));
-
-                    signalDescription = signalDescription[..subSignalBegin] + signalDescription[(subSignalEnd + 1)..];
-                }
-                else
-                {
-                    var integers = signalDescription
-                        .Split(",")
-                        .Select(token => string.IsNullOrEmpty(token) ? subSignals.Dequeue() : new Signal(int.Parse(token)))
-                        .ToArray();
-
-                    return new Signal(integers);
-                }
-            }
+            return Parse(JToken.Parse(signalDescription));
         }
 
-        private static (int, int) GetSubSignalIndexes(string signalDescription)
+        private static Signal Parse(JToken token)
         {
-            var subSignalBegin = signalDescription.IndexOf('[');
-            var subSignalEnd = -1;
-
-            if (subSignalBegin >= 0)
+            return token.Type switch
             {
-                var subSignalsCount = 0;
-                for (var i = subSignalBegin; i < signalDescription.Length; i++)
-                {
-                    if (signalDescription[i] == '[')
-                    {
-                        subSignalsCount += 1;
-                        continue;
-                    }
-
-                    if (signalDescription[i] == ']')
-                    {
-                        subSignalsCount -= 1;
-                        if (subSignalsCount == 0)
-                        {
-                            subSignalEnd = i;
-                            break;
-                        }
-
-                        continue;
-                    }
-                }
-            }
-
-            return (subSignalBegin, subSignalEnd);
+                JTokenType.Array => new Signal(token.Select(Parse).ToArray()),
+                JTokenType.Integer => new Signal(token.Value<int>()),
+                _ => throw new ArgumentOutOfRangeException(nameof(token.Type), token.Type, ":(")
+            };
         }
     }
 }
