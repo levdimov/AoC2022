@@ -80,6 +80,15 @@ public class Day14 : SolverBase
             map = stoneCoords.ToDictionary(c => c, _ => (Unit)new Stone());
         }
 
+        private int Floor
+        {
+            get
+            {
+                var ys = map.Keys.Select(c => c.Y).ToArray();
+                return ys.Max() + 2;
+            }
+        }
+
         public override string ToString()
         {
             var xs = map.Keys.Select(c => c.X).ToArray();
@@ -106,13 +115,15 @@ public class Day14 : SolverBase
 
         public int Emulate()
         {
+            var floor = Floor;
+
             while (true) //sand tick
             {
                 var sc = new Coord(500, 0);
 
                 while (true) //emulation tick
                 {
-                    if (!map.Keys.Where(c => c.X == sc.X).Any(c => c.Y > sc.Y))
+                    if (map.ContainsKey(sc))
                     {
                         return map.Values.OfType<Sand>().Count();
                     }
@@ -121,19 +132,19 @@ public class Day14 : SolverBase
                     var l = sc with { X = sc.X - 1, Y = sc.Y + 1 };
                     var r = sc with { X = sc.X + 1, Y = sc.Y + 1 };
 
-                    if (!map.ContainsKey(d))
+                    if (!map.ContainsKey(d) && d.Y < floor)
                     {
                         sc = d;
                         continue;
                     }
 
-                    if (!map.ContainsKey(l))
+                    if (!map.ContainsKey(l) && l.Y < floor)
                     {
                         sc = l;
                         continue;
                     }
 
-                    if (!map.ContainsKey(r))
+                    if (!map.ContainsKey(r) && r.Y < floor)
                     {
                         sc = r;
                         continue;
