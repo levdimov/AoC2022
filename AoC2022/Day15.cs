@@ -1,4 +1,7 @@
-﻿namespace AoC2022;
+﻿using MoreLinq;
+using System.Collections.Concurrent;
+
+namespace AoC2022;
 
 public class Day15 : SolverBase
 {
@@ -21,27 +24,75 @@ public class Day15 : SolverBase
         }
 
         var sensorCs = points.Where(p => p.Value is Sensor).ToArray();
-        const int targetY = 2000000;
-        foreach (var sensorC in sensorCs)
+
+        var maxY = 4_000_000;
+        var maxX = 4_000_000;
+        for (var targetY = 0; targetY <= maxY; targetY++)
         {
-            var maxDist = sensorC.Key.Dist(((Sensor)sensorC.Value).BeaconC);
-            if (sensorC.Key.Y - maxDist <= targetY && targetY <= sensorC.Key.Y + maxDist)
+            var usable = sensorCs
+                .Where(s =>
+                       {
+                           var maxDist = s.Key.Dist(((Sensor)s.Value).BeaconC);
+                           return s.Key.Y - maxDist <= targetY &&
+                                  targetY <= s.Key.Y + maxDist;
+                       })
+                .ToArray();
+
+            var segments = new List<(int, int)>();
+            foreach (var sensorC in usable)
             {
+                var maxDist = sensorC.Key.Dist(((Sensor)sensorC.Value).BeaconC);
+
                 var ySpan = Math.Abs(targetY - sensorC.Key.Y);
                 var xSpan = maxDist - ySpan;
 
-                for (var x = sensorC.Key.X - xSpan; x <= sensorC.Key.X + xSpan; x++)
-                {
-                    var newC = new C(x, targetY);
-                    if (!points.ContainsKey(newC))
-                    {
-                        points.Add(newC, new Empty());
-                    }
-                }
+                var left = Math.Max(0, sensorC.Key.X - xSpan);
+                var right = Math.Min(maxX, sensorC.Key.X + xSpan);
+
+                segments.Add((left, right));
+            }
+
+            var merged = Merge(segments.ToArray());
+
+            if (merged.Length == 2 && merged[1].Item1 - merged[0].Item2 == 2)
+            {
+                var x = merged[0].Item2 + 1;
+                var y = targetY;
+
+                Console.WriteLine($"{x},{y}");
+
+                return ((x * 4_000_000L) + y).ToString();
             }
         }
 
-        return points.Where(p => p.Key.Y == targetY).Count(p => p.Value is Empty).ToString();
+        return "-1";
+    }
+
+    public (int, int)[] Merge((int, int)[] intervals)
+    {
+        intervals = intervals.OrderBy(i => i.Item1).ToArray();
+
+        var stack = new Stack<(int, int)>();
+
+        var curr = intervals[0];
+
+        for (var i = 1; i < intervals.Length; i++)
+        {
+            var next = intervals[i];
+            if (curr.Item2 >= next.Item1)
+            {
+                curr = (curr.Item1, Math.Max(curr.Item2, next.Item2));
+            }
+            else
+            {
+                stack.Push(curr);
+                curr = next;
+            }
+        }
+
+        stack.Push(curr);
+
+        return stack.Reverse().ToArray();
     }
 
     private record C(int X, int Y)
